@@ -57,25 +57,32 @@ form.addEventListener('submit', (event) => {
   render();
 });
 
+// ── Handlers ────────────────────────────────────────────
+const handleDelete = (id) => {
+  tasks = tasks.filter(task => task.id !== id);
+  render();
+};
+
+const handleToggle = (id) => {
+  tasks = tasks.map(task =>
+    task.id === id ? { ...task, completed: !task.completed } : task
+  );
+  render();
+};
+
 // ── Delegação de eventos na lista ───────────────────────
 taskList.addEventListener('click', (event) => {
 
-  // Excluir
   const deleteBtn = event.target.closest('.btn-delete');
   if (deleteBtn) {
     const id = Number(deleteBtn.closest('.task-item').dataset.id);
-    tasks = tasks.filter(task => task.id !== id);
-    render();
+    handleDelete(id);
     return;
   }
 
-  // Concluir / desfazer
   const checkbox = event.target.closest('input[type="checkbox"]');
   if (checkbox) {
     const id = Number(checkbox.closest('.task-item').dataset.id);
-    tasks = tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    );
-    render();
+    handleToggle(id);
   }
 });

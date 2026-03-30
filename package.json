@@ -1,0 +1,11 @@
+{
+  "name": "tasks-manager",
+  "version": "1.0.0",
+  "description": "A CRUD task management application using vanilla JavaScript and Node.js",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "author": "Ricardo Linhares",
+  "license": "ISC"
+}

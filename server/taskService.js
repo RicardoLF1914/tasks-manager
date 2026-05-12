@@ -18,7 +18,14 @@ if (!fs.existsSync(DATA_FILE)) {
 const readTasks = () => {
   try {
     const content = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(content);
+    const tasks = JSON.parse(content);
+
+    // Migração defensiva — garante campos novos em tarefas antigas
+    return tasks.map(task => ({
+      priority:  'medium',
+      createdAt: new Date().toISOString(),
+      ...task, // os valores reais da tarefa sobrescrevem os padrões
+    }));
   } catch {
     return [];
   }

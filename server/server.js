@@ -1,6 +1,7 @@
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const { handleRoutes } = require('./routes');
 
 // ── Diretório público ────────────────────────────────────
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -13,14 +14,20 @@ const MIME_TYPES = {
 };
 
 // ── Servidor ─────────────────────────────────────────────
-const server = http.createServer((req, res) => {
-  // Normaliza a URL: '/' vira '/index.html'
+const server = http.createServer(async (req, res) => {
+
+  // Requisições da API — delega ao roteador
+  if (req.url.startsWith('/tasks')) {
+    handleRoutes(req, res);
+    return;
+  }
+
+  // Arquivos estáticos
   const urlPath = req.url === '/' ? '/index.html' : req.url;
   const filePath = path.join(PUBLIC_DIR, urlPath);
   const ext = path.extname(filePath);
   const contentType = MIME_TYPES[ext] || 'text/plain';
 
-  // Lê e serve o arquivo estático
   if (fs.existsSync(filePath)) {
     const content = fs.readFileSync(filePath);
     res.writeHead(200, { 'Content-Type': contentType });
@@ -28,7 +35,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Arquivo não encontrado
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('404 — Não encontrado');
 });

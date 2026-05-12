@@ -30,7 +30,14 @@ const handleRoutes = async (req, res) => {
   if (method === 'POST' && url === '/tasks') {
     const body = await lerBody(req);
     const { title, priority } = JSON.parse(body);
-    const newTask = addTask({ title, priority });
+
+    // Validação — title é obrigatório
+    if (!title || !title.trim()) {
+      sendJSON(res, 400, { error: 'O campo title é obrigatório' });
+      return;
+    }
+
+    const newTask = addTask({ title: title.trim(), priority });
     sendJSON(res, 201, newTask);
     return;
   }

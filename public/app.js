@@ -1,14 +1,46 @@
-// ── Estado ──────────────────────────────────────────────
-let tasks = [
-  { id: 1, title: 'Estudar JavaScript', completed: false },
-  { id: 2, title: 'Construir o Tasks', completed: false },
-];
+// ── Camada de API ────────────────────────────────────────
+const api = {
+  fetchTasks: async () => {
+    const response = await fetch('/tasks');
+    return response.json();
+  },
 
-// ── Referências DOM ─────────────────────────────────────
+  createTask: async (title, priority = 'medium') => {
+    const response = await fetch('/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, priority }),
+    });
+    return response.json();
+  },
+
+  updateTask: async (id, changes) => {
+    const response = await fetch(`/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(changes),
+    });
+    return response.json();
+  },
+
+  deleteTask: async (id) => {
+    const response = await fetch(`/tasks/${id}`, {
+      method: 'DELETE',
+    });
+    return response.json();
+  },
+};
+
+// ── Estado ───────────────────────────────────────────────
+let tasks = [];
+
+// ── Referências DOM ──────────────────────────────────────
 const taskList   = document.querySelector('#task-list');
 const emptyState = document.querySelector('#empty-state');
+const form       = document.querySelector('#task-form');
+const input      = document.querySelector('#task-input');
 
-// ── Renderização ────────────────────────────────────────
+// ── Renderização ─────────────────────────────────────────
 const render = () => {
   taskList.innerHTML = '';
 
@@ -34,45 +66,35 @@ const render = () => {
   }
 };
 
-render();
+// ── Handlers ─────────────────────────────────────────────
+const handleDelete = async (id) => {
+  await api.deleteTask(id);
+  tasks = tasks.filter(task => task.id !== id);
+  render();
+};
 
-// ── Formulário ──────────────────────────────────────────
-const form  = document.querySelector('#task-form');
-const input = document.querySelector('#task-input');
+const handleToggle = async (id) => {
+  const task = tasks.find(task => task.id === id);
+  const updated = await api.updateTask(id, { completed: !task.completed });
+  tasks = tasks.map(t => t.id === id ? updated : t);
+  render();
+};
 
-form.addEventListener('submit', (event) => {
-  event.preventDefault(); // impede o recarregamento da página
+// ── Formulário ───────────────────────────────────────────
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
 
   const title = input.value.trim();
-  if (!title) return; // ignora envio com campo vazio
+  if (!title) return;
 
-  const newTask = {
-    id: Date.now(),
-    title,
-    completed: false,
-  };
-
+  const newTask = await api.createTask(title);
   tasks.push(newTask);
   input.value = '';
   render();
 });
 
-// ── Handlers ────────────────────────────────────────────
-const handleDelete = (id) => {
-  tasks = tasks.filter(task => task.id !== id);
-  render();
-};
-
-const handleToggle = (id) => {
-  tasks = tasks.map(task =>
-    task.id === id ? { ...task, completed: !task.completed } : task
-  );
-  render();
-};
-
-// ── Delegação de eventos na lista ───────────────────────
+// ── Delegação de eventos na lista ────────────────────────
 taskList.addEventListener('click', (event) => {
-
   const deleteBtn = event.target.closest('.btn-delete');
   if (deleteBtn) {
     const id = Number(deleteBtn.closest('.task-item').dataset.id);
@@ -86,3 +108,11 @@ taskList.addEventListener('click', (event) => {
     handleToggle(id);
   }
 });
+
+// ── Inicialização ────────────────────────────────────────
+const init = async () => {
+  tasks = await api.fetchTasks();
+  render();
+};
+
+init();

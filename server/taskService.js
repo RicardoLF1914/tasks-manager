@@ -73,20 +73,3 @@ const deleteTask = (id) => {
 };
 
 module.exports = { getAllTasks, addTask, updateTask, deleteTask };
-
-// ── Teste (remover depois) ───────────────────────────────
-console.log('--- getAllTasks ---');
-console.log(getAllTasks());
-
-console.log('--- addTask ---');
-const t1 = addTask({ title: 'Estudar Node.js', priority: 'high' });
-const t2 = addTask({ title: 'Construir o servidor' }); // priority padrão: medium
-console.log(getAllTasks());
-
-console.log('--- updateTask ---');
-updateTask(t1.id, { completed: true });
-console.log(getAllTasks());
-
-console.log('--- deleteTask ---');
-deleteTask(t2.id);
-console.log(getAllTasks());

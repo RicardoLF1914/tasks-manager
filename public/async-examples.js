@@ -57,3 +57,42 @@ console.log('4 — fim');
 // 1º código síncrono (Call Stack)
 // 2º Microtask Queue (Promises) — prioridade maior
 // 3º Callback Queue (setTimeout) — prioridade menor
+
+// ── PROMISES ─────────────────────────────────────────────
+
+// Criando uma Promise manualmente
+const buscarTarefa = (id) => {
+  return new Promise((resolve, reject) => {
+    const tarefas = [
+      { id: 1, title: 'Estudar JS' },
+      { id: 2, title: 'Construir o Tasks' },
+    ];
+
+    const tarefa = tarefas.find(t => t.id === id);
+
+    if (tarefa) {
+      resolve(tarefa);
+    } else {
+      reject(new Error(`Tarefa ${id} não encontrada`));
+    }
+  });
+};
+
+// .then() e .catch()
+buscarTarefa(1)
+  .then(tarefa => {
+    console.log('Encontrada:', tarefa.title);
+    return tarefa.title.toUpperCase(); // passa para o próximo .then()
+  })
+  .then(titulo => console.log('Título em maiúsculas:', titulo))
+  .catch(erro => console.log('Erro:', erro.message))
+  .finally(() => console.log('Busca finalizada'));
+
+// Testando o caminho de erro
+buscarTarefa(99)
+  .then(tarefa => console.log('nunca executa'))
+  .catch(erro => console.log('Erro esperado:', erro.message));
+
+// Promise.all — em paralelo
+Promise.all([buscarTarefa(1), buscarTarefa(2)])
+  .then(tarefas => console.log('Todas encontradas:', tarefas));

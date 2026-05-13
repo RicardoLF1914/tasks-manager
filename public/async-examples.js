@@ -96,3 +96,63 @@ buscarTarefa(99)
 // Promise.all — em paralelo
 Promise.all([buscarTarefa(1), buscarTarefa(2)])
   .then(tarefas => console.log('Todas encontradas:', tarefas));
+
+// ── ASYNC/AWAIT E FETCH API ───────────────────────────────
+
+// GET — buscar todas as tarefas
+const fetchTasks = async () => {
+  try {
+    const response = await fetch('/tasks');
+    const tasks = await response.json();
+    console.log('fetchTasks:', tasks);
+    return tasks;
+  } catch (erro) {
+    console.log('Erro em fetchTasks:', erro.message);
+  }
+};
+
+// POST — criar uma tarefa
+const createTask = async (title, priority = 'medium') => {
+  try {
+    const response = await fetch('/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, priority }),
+    });
+    const newTask = await response.json();
+    console.log('createTask:', newTask);
+    return newTask;
+  } catch (erro) {
+    console.log('Erro em createTask:', erro.message);
+  }
+};
+
+// PUT — atualizar uma tarefa
+const updateTask = async (id, changes) => {
+  try {
+    const response = await fetch(`/tasks/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(changes),
+    });
+    const updated = await response.json();
+    console.log('updateTask:', updated);
+    return updated;
+  } catch (erro) {
+    console.log('Erro em updateTask:', erro.message);
+  }
+};
+
+// DELETE — remover uma tarefa
+const deleteTask = async (id) => {
+  try {
+    const response = await fetch(`/tasks/${id}`, {
+      method: 'DELETE',
+    });
+    const result = await response.json();
+    console.log('deleteTask:', result);
+    return result;
+  } catch (erro) {
+    console.log('Erro em deleteTask:', erro.message);
+  }
+};

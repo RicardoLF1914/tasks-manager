@@ -11,10 +11,12 @@ A full-stack CRUD task management application built with vanilla JavaScript, Nod
 ## ✨ Features
 
 - Create, inline-edit, complete, and delete tasks
+- Optional task description with inline editing support
+- Task detail modal showing full info fetched by ID
 - Priority selector (High, Medium, Low) with visual indicators (colored border + badge)
 - Status filters (All, Pending, Completed) with dynamic count
 - Progress bar showing completion percentage
-- JSON file persistence — tasks survive server restarts
+- SQLite persistence — tasks survive server restarts
 - Error handling on both backend and frontend with user feedback
 - Light and dark mode with preference saved in localStorage
 - Responsive design
@@ -27,7 +29,7 @@ A full-stack CRUD task management application built with vanilla JavaScript, Nod
 |-------|------------|
 | Frontend | HTML, CSS, JavaScript (ES6+) |
 | Backend | Node.js (native modules: `http`, `fs`, `path`) |
-| Persistence | Local JSON file |
+| Database | SQLite via `better-sqlite3` |
 | Version control | Git + Conventional Commits |
 
 ---
@@ -43,7 +45,7 @@ tasks-manager/
 ├── server/
 │   ├── server.js         # HTTP server and static file serving
 │   ├── routes.js         # REST API routing
-│   └── taskService.js    # CRUD operations and JSON persistence
+│   └── taskService.js    # CRUD operations and SQLite persistence
 ├── package.json
 └── README.md
 ```
@@ -61,13 +63,14 @@ git clone https://github.com/RicardoLF1914/tasks-manager.git
 # 2. Enter the project folder
 cd tasks-manager
 
-# 3. Start the server
+# 3. Install dependencies
+npm install
+
+# 4. Start the server
 npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-No `npm install` needed — the project uses only Node.js native modules.
 
 ---
 
@@ -76,6 +79,7 @@ No `npm install` needed — the project uses only Node.js native modules.
 | Method | Route | Description |
 |--------|-------|-------------|
 | GET | `/tasks` | Returns all tasks |
+| GET | `/tasks/:id` | Returns a specific task by ID |
 | POST | `/tasks` | Creates a new task |
 | PUT | `/tasks/:id` | Updates a task |
 | DELETE | `/tasks/:id` | Removes a task |

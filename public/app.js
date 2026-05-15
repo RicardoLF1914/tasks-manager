@@ -8,11 +8,11 @@ const api = {
     return response.json();
   },
 
-  createTask: async (title, priority = 'medium') => {
+  createTask: async (title, priority = 'medium', description = '') => {
     const response = await fetch('/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, priority }),
+      body: JSON.stringify({ title, priority, description }),
     });
     if (!response.ok) throw new Error('Erro ao criar tarefa');
     return response.json();
@@ -60,6 +60,7 @@ const taskList      = document.querySelector('#task-list');
 const emptyState    = document.querySelector('#empty-state');
 const form          = document.querySelector('#task-form');
 const input         = document.querySelector('#task-input');
+const descriptionInput = document.querySelector('#task-description');
 const prioritySelect = document.querySelector('#priority-select');
 const summaryText   = document.querySelector('#summary-text');
 const filterBtns    = document.querySelectorAll('.btn-filter');
@@ -135,7 +136,10 @@ const render = () => {
 
     li.innerHTML = `
       <input type="checkbox" ${task.completed ? 'checked' : ''} />
-      <span class="task-title">${task.title}</span>
+      <div class="task-body">
+        <span class="task-title">${task.title}</span>
+        ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
+      </div>
       <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
       <button class="btn btn-danger btn-delete">✕</button>
     `;
@@ -222,11 +226,13 @@ form.addEventListener('submit', async (event) => {
   if (!title) return;
 
   try {
-    const priority = prioritySelect.value;
-    const newTask  = await api.createTask(title, priority);
+    const priority    = prioritySelect.value;
+    const description = descriptionInput.value.trim();
+    const newTask     = await api.createTask(title, priority, description);
     tasks.push(newTask);
-    input.value          = '';
-    prioritySelect.value = 'medium';
+    input.value             = '';
+    descriptionInput.value  = '';
+    prioritySelect.value    = 'medium';
     render();
   } catch (error) {
     showError('Não foi possível criar a tarefa. Tente novamente.');

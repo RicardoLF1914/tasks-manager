@@ -17,15 +17,23 @@
         class="task-input"
         id="task-input"
         type="text"
-        placeholder="Nova tarefa..."
+        placeholder="Task title..."
         required
       />
-      <select class="priority-select" id="priority-select">
-        <option value="medium">Média</option>
-        <option value="high">Alta</option>
-        <option value="low">Baixa</option>
-      </select>
-      <button class="btn btn-primary" type="submit">Adicionar</button>
+      <textarea
+        class="task-textarea"
+        id="task-description"
+        placeholder="Description (optional)"
+        rows="2"
+      ></textarea>
+      <div class="form-bottom">
+        <select class="priority-select" id="priority-select">
+          <option value="medium">Média</option>
+          <option value="high">Alta</option>
+          <option value="low">Baixa</option>
+        </select>
+        <button class="btn btn-primary" type="submit">Adicionar</button>
+      </div>
     </form>
 
     <!-- Resumo e filtros -->

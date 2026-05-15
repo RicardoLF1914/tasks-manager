@@ -60,8 +60,14 @@ body {
 /* ── Formulário ── */
 .task-form {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+}
+
+.form-bottom {
+  display: flex;
+  gap: 0.75rem;
 }
 
 .task-input {
@@ -123,8 +129,13 @@ body {
 }
 
 .task-title {
-  flex: 1;
   font-size: 0.975rem;
+}
+
+.task-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .task-item.completed .task-title { text-decoration: line-through; }
@@ -286,4 +297,35 @@ body {
 
 .theme-toggle:hover {
   opacity: 0.85;
+}
+
+/* ── Textarea de descrição ── */
+.task-textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.task-textarea:focus { border-color: var(--color-primary); }
+
+/* ── Descrição na listagem ── */
+.task-description {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin-top: 0.2rem;
+}
+
+/* ── Ajuste do modo escuro para textarea ── */
+[data-theme="dark"] .task-textarea {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
 }

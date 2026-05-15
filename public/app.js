@@ -65,6 +65,25 @@ const summaryText   = document.querySelector('#summary-text');
 const filterBtns    = document.querySelectorAll('.btn-filter');
 const progressBar   = document.querySelector('#progress-bar');
 
+// ── Tema ─────────────────────────────────────────────────
+// Persiste a preferência do usuário no localStorage
+const themeToggle = document.querySelector('#theme-toggle');
+
+const applyTheme = (theme) => {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+};
+
+const savedTheme = localStorage.getItem('theme') || 'light';
+applyTheme(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next    = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+});
+
 // ── Renderização ─────────────────────────────────────────
 // render() é a única função que escreve no DOM.
 // Sempre chamada após qualquer mudança de estado.

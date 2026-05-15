@@ -42,6 +42,7 @@ const form       = document.querySelector('#task-form');
 const input      = document.querySelector('#task-input');
 const summaryText = document.querySelector('#summary-text');
 const filterBtns  = document.querySelectorAll('.btn-filter');
+const prioritySelect = document.querySelector('#priority-select');
 
 // ── Renderização ─────────────────────────────────────────
 const render = () => {
@@ -77,10 +78,14 @@ const render = () => {
     const li = document.createElement('li');
     li.className = `task-item${task.completed ? ' completed' : ''}`;
     li.dataset.id = task.id;
+    li.dataset.priority = task.priority;
+
+    const priorityLabels = { high: 'Alta', medium: 'Média', low: 'Baixa' };
 
     li.innerHTML = `
       <input type="checkbox" ${task.completed ? 'checked' : ''} />
       <span class="task-title">${task.title}</span>
+      <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
       <button class="btn btn-danger btn-delete">✕</button>
     `;
 
@@ -164,9 +169,11 @@ form.addEventListener('submit', async (event) => {
   const title = input.value.trim();
   if (!title) return;
 
-  const newTask = await api.createTask(title);
+  const priority = prioritySelect.value;
+  const newTask = await api.createTask(title, priority);
   tasks.push(newTask);
   input.value = '';
+  prioritySelect.value = 'medium'; // reseta o select
   render();
 });
 

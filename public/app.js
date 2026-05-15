@@ -1,4 +1,6 @@
 // ── Camada de API ────────────────────────────────────────
+// Centraliza todas as comunicações com o backend.
+// Se a URL ou o formato mudar, só este objeto precisa ser atualizado.
 const api = {
   fetchTasks: async () => {
     const response = await fetch('/tasks');
@@ -24,51 +26,58 @@ const api = {
   },
 
   deleteTask: async (id) => {
-    const response = await fetch(`/tasks/${id}`, {
-      method: 'DELETE',
-    });
+    const response = await fetch(`/tasks/${id}`, { method: 'DELETE' });
     return response.json();
   },
 };
 
 // ── Estado ───────────────────────────────────────────────
-let tasks = [];
+// tasks: fonte da verdade — todos os dados vêm do servidor via init()
+// currentFilter: estado de UI — não é persistido
+let tasks         = [];
 let currentFilter = 'all';
 
 // ── Referências DOM ──────────────────────────────────────
-const taskList   = document.querySelector('#task-list');
-const emptyState = document.querySelector('#empty-state');
-const form       = document.querySelector('#task-form');
-const input      = document.querySelector('#task-input');
-const summaryText = document.querySelector('#summary-text');
-const filterBtns  = document.querySelectorAll('.btn-filter');
+// Capturadas uma única vez para evitar buscas repetidas no DOM
+const taskList      = document.querySelector('#task-list');
+const emptyState    = document.querySelector('#empty-state');
+const form          = document.querySelector('#task-form');
+const input         = document.querySelector('#task-input');
 const prioritySelect = document.querySelector('#priority-select');
-const progressBar = document.querySelector('#progress-bar');
+const summaryText   = document.querySelector('#summary-text');
+const filterBtns    = document.querySelectorAll('.btn-filter');
+const progressBar   = document.querySelector('#progress-bar');
 
 // ── Renderização ─────────────────────────────────────────
+// render() é a única função que escreve no DOM.
+// Sempre chamada após qualquer mudança de estado.
 const render = () => {
   taskList.innerHTML = '';
 
-  // Aplicar filtro
+  // Filtragem — não modifica o array original
   const filtered = tasks.filter(task => {
     if (currentFilter === 'pending')   return !task.completed;
     if (currentFilter === 'completed') return  task.completed;
     return true;
   });
 
-  // Atualizar resumo
-  const total     = tasks.length;
-  const completed = tasks.filter(task => task.completed).length;
-  const pending   = total - completed;
-  summaryText.textContent = `${pending} pendente${pending !== 1 ? 's' : ''} · ${completed} concluída${completed !== 1 ? 's' : ''}`;
+  // Resumo
+  const total         = tasks.length;
+  const completedCount = tasks.filter(task => task.completed).length;
+  const pendingCount   = total - completedCount;
 
-  // Atualizar botão ativo
+  summaryText.textContent =
+    `${pendingCount} pendente${pendingCount !== 1 ? 's' : ''} · ` +
+    `${completedCount} concluída${completedCount !== 1 ? 's' : ''}`;
+
+  // Botão ativo — toggle adiciona 'active' se a condição for true
   filterBtns.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === currentFilter);
   });
 
-  // Atualizar barra de progresso
-  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+  // Barra de progresso
+  // Proteção contra divisão por zero quando não há tarefas
+  const percentage = total === 0 ? 0 : Math.round((completedCount / total) * 100);
   progressBar.style.width = `${percentage}%`;
 
   // Estado vazio
@@ -79,12 +88,12 @@ const render = () => {
 
   emptyState.style.display = 'none';
 
-  // Renderizar tarefas
+  // Rótulos de prioridade — mapeamento de valor técnico para label de UI
   const priorityLabels = { high: 'Alta', medium: 'Média', low: 'Baixa' };
 
   for (const task of filtered) {
     const li = document.createElement('li');
-    li.className = `task-item${task.completed ? ' completed' : ''}`;
+    li.className        = `task-item${task.completed ? ' completed' : ''}`;
     li.dataset.id       = task.id;
     li.dataset.priority = task.priority;
 
@@ -107,7 +116,7 @@ const handleDelete = async (id) => {
 };
 
 const handleToggle = async (id) => {
-  const task = tasks.find(task => task.id === id);
+  const task    = tasks.find(task => task.id === id);
   const updated = await api.updateTask(id, { completed: !task.completed });
   tasks = tasks.map(t => t.id === id ? updated : t);
   render();
@@ -116,27 +125,24 @@ const handleToggle = async (id) => {
 const handleEdit = (id, spanEl) => {
   const li = spanEl.closest('.task-item');
 
-  // Evitar dupla edição
+  // Evitar dupla edição — verifica se já existe um input de edição no item
   if (li.querySelector('.edit-input')) return;
 
-  const task = tasks.find(task => task.id === id);
-
-  // Criar input de edição
+  const task      = tasks.find(task => task.id === id);
   const editInput = document.createElement('input');
   editInput.type      = 'text';
   editInput.value     = task.title;
   editInput.className = 'task-input edit-input';
 
-  // Substituir span pelo input
   li.replaceChild(editInput, spanEl);
   editInput.focus();
-  editInput.select(); // seleciona o texto para facilitar a edição
-  
-  let cancelled = false; // flag de cancelamento
+  editInput.select();
 
-  // Salvar edição
+  let cancelled = false;
+
   const saveEdit = async () => {
-    if (cancelled) return; // cancelado — não salva
+    // Flag garante que blur não salva quando Escape foi pressionado
+    if (cancelled) return;
 
     const newTitle = editInput.value.trim();
 
@@ -148,13 +154,9 @@ const handleEdit = (id, spanEl) => {
     render();
   };
 
-  // Confirmar com Enter, cancelar com Escape, salvar com blur
   editInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter')  { saveEdit(); }
-    if (event.key === 'Escape') {
-      cancelled = true; // marca como cancelado
-      render();         // remove o input do DOM — dispara blur
-    }
+    if (event.key === 'Escape') { cancelled = true; render(); }
   });
 
   editInput.addEventListener('blur', saveEdit);
@@ -176,14 +178,15 @@ form.addEventListener('submit', async (event) => {
   if (!title) return;
 
   const priority = prioritySelect.value;
-  const newTask = await api.createTask(title, priority);
+  const newTask  = await api.createTask(title, priority);
+
   tasks.push(newTask);
-  input.value = '';
-  prioritySelect.value = 'medium'; // reseta o select
+  input.value          = '';
+  prioritySelect.value = 'medium';
   render();
 });
 
-// ── Delegação de eventos na lista ────────────────────────
+// ── Eventos na lista ─────────────────────────────────────
 taskList.addEventListener('click', (event) => {
   const deleteBtn = event.target.closest('.btn-delete');
   if (deleteBtn) {
@@ -208,6 +211,7 @@ taskList.addEventListener('dblclick', (event) => {
 });
 
 // ── Inicialização ────────────────────────────────────────
+// Carrega as tarefas do servidor e renderiza o estado inicial
 const init = async () => {
   tasks = await api.fetchTasks();
   render();

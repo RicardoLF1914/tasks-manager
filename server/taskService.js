@@ -22,9 +22,10 @@ const readTasks = () => {
 
     // Migração defensiva — garante campos novos em tarefas antigas
     return tasks.map(task => ({
-      priority:  'medium',
-      createdAt: new Date().toISOString(),
-      ...task, // os valores reais da tarefa sobrescrevem os padrões
+      priority:    'medium',
+      description: '',
+      createdAt:   new Date().toISOString(),
+      ...task,
     }));
   } catch {
     return [];
@@ -46,12 +47,19 @@ const getAllTasks = () => {
   return readTasks();
 };
 
+// Retorna uma tarefa específica pelo id — retorna null se não encontrada
+const getTaskById = (id) => {
+  const tasks = readTasks();
+  return tasks.find(task => task.id === id) || null;
+};
+
 // Cria uma nova tarefa com id único, priority padrão e createdAt automático
-const addTask = ({ title, priority = 'medium' }) => {
+const addTask = ({ title, priority = 'medium', description = '' }) => {
   const tasks = readTasks();
   const newTask = {
     id: Date.now(),
     title,
+    description,
     priority,
     completed: false,
     createdAt: new Date().toISOString(),
@@ -81,4 +89,4 @@ const deleteTask = (id) => {
   return true;
 };
 
-module.exports = { getAllTasks, addTask, updateTask, deleteTask };
+module.exports = { getAllTasks, getTaskById, addTask, updateTask, deleteTask };

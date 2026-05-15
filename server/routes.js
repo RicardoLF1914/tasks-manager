@@ -1,4 +1,4 @@
-const { getAllTasks, addTask, updateTask, deleteTask } = require('./taskService');
+const { getAllTasks, getTaskById, addTask, updateTask, deleteTask } = require('./taskService');
 
 // ── Helper: ler o body da requisição ────────────────────
 // Acumula os chunks do body da requisição e resolve com o conteúdo completo
@@ -30,6 +30,18 @@ const handleRoutes = async (req, res) => {
       return;
     }
 
+    // GET /tasks/:id — retorna uma tarefa específica
+    if (method === 'GET' && url.startsWith('/tasks/')) {
+      const id   = Number(url.split('/')[2]);
+      const task = getTaskById(id);
+      if (!task) {
+        sendJSON(res, 404, { error: 'Tarefa não encontrada' });
+        return;
+      }
+      sendJSON(res, 200, task);
+      return;
+    }
+
     // POST /tasks — cria uma nova tarefa
     if (method === 'POST' && url === '/tasks') {
       const body = await readBody(req);
@@ -42,14 +54,14 @@ const handleRoutes = async (req, res) => {
         return;
       }
 
-      const { title, priority } = parsed;
+      const { title, priority, description } = parsed;
 
       if (!title || !title.trim()) {
         sendJSON(res, 400, { error: 'O campo title é obrigatório' });
         return;
       }
 
-      const newTask = addTask({ title: title.trim(), priority });
+      const newTask = addTask({ title: title.trim(), priority, description });
       sendJSON(res, 201, newTask);
       return;
     }

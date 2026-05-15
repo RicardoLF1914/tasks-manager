@@ -21,57 +21,81 @@ const sendJSON = (res, statusCode, data) => {
 const handleRoutes = async (req, res) => {
   const { method, url } = req;
 
-  // GET /tasks — retorna todas as tarefas
-  if (method === 'GET' && url === '/tasks') {
-    const tasks = getAllTasks();
-    sendJSON(res, 200, tasks);
-    return;
-  }
+  try {
 
-  // POST /tasks — cria uma nova tarefa
-  if (method === 'POST' && url === '/tasks') {
-    const body = await readBody(req);
-    const { title, priority } = JSON.parse(body);
-
-    // Validação — title é obrigatório
-    if (!title || !title.trim()) {
-      sendJSON(res, 400, { error: 'O campo title é obrigatório' });
+    // GET /tasks — retorna todas as tarefas
+    if (method === 'GET' && url === '/tasks') {
+      const tasks = getAllTasks();
+      sendJSON(res, 200, tasks);
       return;
     }
 
-    const newTask = addTask({ title: title.trim(), priority });
-    sendJSON(res, 201, newTask);
-    return;
-  }
+    // POST /tasks — cria uma nova tarefa
+    if (method === 'POST' && url === '/tasks') {
+      const body = await readBody(req);
 
-  // PUT /tasks/:id — atualiza uma tarefa
-  if (method === 'PUT' && url.startsWith('/tasks/')) {
-    const id = Number(url.split('/')[2]);
-    const body = await readBody(req);
-    const changes = JSON.parse(body);
-    const updated = updateTask(id, changes);
-    if (!updated) {
-      sendJSON(res, 404, { error: 'Tarefa não encontrada' });
+      let parsed;
+      try {
+        parsed = JSON.parse(body);
+      } catch {
+        sendJSON(res, 400, { error: 'Body inválido — JSON esperado' });
+        return;
+      }
+
+      const { title, priority } = parsed;
+
+      if (!title || !title.trim()) {
+        sendJSON(res, 400, { error: 'O campo title é obrigatório' });
+        return;
+      }
+
+      const newTask = addTask({ title: title.trim(), priority });
+      sendJSON(res, 201, newTask);
       return;
     }
-    sendJSON(res, 200, updated);
-    return;
-  }
 
-  // DELETE /tasks/:id — remove uma tarefa
-  if (method === 'DELETE' && url.startsWith('/tasks/')) {
-    const id = Number(url.split('/')[2]);
-    const success = deleteTask(id);
-    if (!success) {
-      sendJSON(res, 404, { error: 'Tarefa não encontrada' });
+    // PUT /tasks/:id — atualiza uma tarefa
+    if (method === 'PUT' && url.startsWith('/tasks/')) {
+      const id   = Number(url.split('/')[2]);
+      const body = await readBody(req);
+
+      let changes;
+      try {
+        changes = JSON.parse(body);
+      } catch {
+        sendJSON(res, 400, { error: 'Body inválido — JSON esperado' });
+        return;
+      }
+
+      const updated = updateTask(id, changes);
+      if (!updated) {
+        sendJSON(res, 404, { error: 'Tarefa não encontrada' });
+        return;
+      }
+      sendJSON(res, 200, updated);
       return;
     }
-    sendJSON(res, 200, { success: true });
-    return;
-  }
 
-  // Rota não encontrada
-  sendJSON(res, 404, { error: 'Rota não encontrada' });
+    // DELETE /tasks/:id — remove uma tarefa
+    if (method === 'DELETE' && url.startsWith('/tasks/')) {
+      const id      = Number(url.split('/')[2]);
+      const success = deleteTask(id);
+      if (!success) {
+        sendJSON(res, 404, { error: 'Tarefa não encontrada' });
+        return;
+      }
+      sendJSON(res, 200, { success: true });
+      return;
+    }
+
+    // Rota não encontrada
+    sendJSON(res, 404, { error: 'Rota não encontrada' });
+
+  } catch (error) {
+    // Erro inesperado — loga no servidor e retorna 500 ao cliente
+    console.error('Erro interno:', error.message);
+    sendJSON(res, 500, { error: 'Erro interno do servidor' });
+  }
 };
 
 module.exports = { handleRoutes };

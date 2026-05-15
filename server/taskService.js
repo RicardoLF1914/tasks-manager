@@ -32,7 +32,12 @@ const readTasks = () => {
 };
 
 const writeTasks = (tasks) => {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(tasks, null, 2));
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(tasks, null, 2));
+  } catch (error) {
+    console.error('Erro ao escrever tasks.json:', error.message);
+    throw error; // propaga para o chamador tratar
+  }
 };
 
 // ── CRUD ─────────────────────────────────────────────────

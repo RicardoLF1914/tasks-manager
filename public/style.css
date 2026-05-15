@@ -170,3 +170,38 @@ body {
   color: #fff;
   border-color: var(--color-primary);
 }
+
+/* ── Seletor de prioridade ── */
+.priority-select {
+  padding: 0.625rem 0.75rem;
+  border: 2px solid #dfe6e9;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.priority-select:focus { border-color: var(--color-primary); }
+
+/* ── Indicador de prioridade (borda lateral) ── */
+.task-item[data-priority="high"]   { border-left-color: var(--color-high); }
+.task-item[data-priority="medium"] { border-left-color: var(--color-medium); }
+.task-item[data-priority="low"]    { border-left-color: var(--color-low); }
+
+/* ── Badge de prioridade ── */
+.priority-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.priority-badge.high   { background: #fdecea; color: var(--color-high); }
+.priority-badge.medium { background: #fef6e4; color: var(--color-medium); }
+.priority-badge.low    { background: #eafaf1; color: var(--color-low); }

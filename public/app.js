@@ -33,25 +33,47 @@ const api = {
 
 // ── Estado ───────────────────────────────────────────────
 let tasks = [];
+let currentFilter = 'all';
 
 // ── Referências DOM ──────────────────────────────────────
 const taskList   = document.querySelector('#task-list');
 const emptyState = document.querySelector('#empty-state');
 const form       = document.querySelector('#task-form');
 const input      = document.querySelector('#task-input');
+const summaryText = document.querySelector('#summary-text');
+const filterBtns  = document.querySelectorAll('.btn-filter');
 
 // ── Renderização ─────────────────────────────────────────
 const render = () => {
   taskList.innerHTML = '';
 
-  if (tasks.length === 0) {
+  // Aplicar filtro
+  const filtered = tasks.filter(task => {
+    if (currentFilter === 'pending')   return !task.completed;
+    if (currentFilter === 'completed') return  task.completed;
+    return true; // 'all'
+  });
+
+  // Atualizar resumo
+  const total     = tasks.length;
+  const completed = tasks.filter(task => task.completed).length;
+  const pending   = total - completed;
+  summaryText.textContent = `${pending} pendente${pending !== 1 ? 's' : ''} · ${completed} concluída${completed !== 1 ? 's' : ''}`;
+
+  // Atualizar botão ativo
+  filterBtns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+  });
+
+  // Estado vazio
+  if (filtered.length === 0) {
     emptyState.style.display = 'block';
     return;
   }
 
   emptyState.style.display = 'none';
 
-  for (const task of tasks) {
+  for (const task of filtered) {
     const li = document.createElement('li');
     li.className = `task-item${task.completed ? ' completed' : ''}`;
     li.dataset.id = task.id;
@@ -79,6 +101,14 @@ const handleToggle = async (id) => {
   tasks = tasks.map(t => t.id === id ? updated : t);
   render();
 };
+
+// ── Filtros ──────────────────────────────────────────────
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
 
 // ── Formulário ───────────────────────────────────────────
 form.addEventListener('submit', async (event) => {

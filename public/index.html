@@ -22,6 +22,16 @@
       <button class="btn btn-primary" type="submit">Adicionar</button>
     </form>
 
+    <!-- Resumo e filtros -->
+    <div class="summary" id="summary">
+      <span id="summary-text"></span>
+      <div class="filters">
+        <button class="btn btn-filter active" data-filter="all">Todas</button>
+        <button class="btn btn-filter" data-filter="pending">Pendentes</button>
+        <button class="btn btn-filter" data-filter="completed">Concluídas</button>
+      </div>
+    </div>
+
     <ul class="task-list" id="task-list"></ul>
 
     <p class="empty-state" id="empty-state">Nenhuma tarefa ainda. Adicione uma acima!</p>

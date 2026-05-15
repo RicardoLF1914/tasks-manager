@@ -135,3 +135,38 @@ body {
   .task-form { flex-direction: column; }
   .btn-primary { width: 100%; }
 }
+
+/* ── Resumo e filtros ── */
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#summary-text {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.filters {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.btn-filter {
+  background: transparent;
+  color: var(--color-muted);
+  border: 1px solid #dfe6e9;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.btn-filter.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}

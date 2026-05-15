@@ -4,6 +4,7 @@
 const api = {
   fetchTasks: async () => {
     const response = await fetch('/tasks');
+    if (!response.ok) throw new Error('Erro ao buscar tarefas');
     return response.json();
   },
 
@@ -13,6 +14,7 @@ const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, priority }),
     });
+    if (!response.ok) throw new Error('Erro ao criar tarefa');
     return response.json();
   },
 
@@ -22,13 +24,28 @@ const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes),
     });
+    if (!response.ok) throw new Error('Erro ao atualizar tarefa');
     return response.json();
   },
 
   deleteTask: async (id) => {
     const response = await fetch(`/tasks/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Erro ao excluir tarefa');
     return response.json();
   },
+};
+
+// Exibe uma mensagem de erro temporária ao usuário
+const showError = (message) => {
+  const existing = document.querySelector('.error-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className   = 'error-toast';
+  toast.textContent = message;
+  document.querySelector('.container').prepend(toast);
+
+  setTimeout(() => toast.remove(), 4000);
 };
 
 // ── Estado ───────────────────────────────────────────────
@@ -110,16 +127,24 @@ const render = () => {
 
 // ── Handlers ─────────────────────────────────────────────
 const handleDelete = async (id) => {
-  await api.deleteTask(id);
-  tasks = tasks.filter(task => task.id !== id);
-  render();
+  try {
+    await api.deleteTask(id);
+    tasks = tasks.filter(task => task.id !== id);
+    render();
+  } catch (error) {
+    showError('Não foi possível excluir a tarefa. Tente novamente.');
+  }
 };
 
 const handleToggle = async (id) => {
-  const task    = tasks.find(task => task.id === id);
-  const updated = await api.updateTask(id, { completed: !task.completed });
-  tasks = tasks.map(t => t.id === id ? updated : t);
-  render();
+  try {
+    const task    = tasks.find(task => task.id === id);
+    const updated = await api.updateTask(id, { completed: !task.completed });
+    tasks = tasks.map(t => t.id === id ? updated : t);
+    render();
+  } catch (error) {
+    showError('Não foi possível atualizar a tarefa. Tente novamente.');
+  }
 };
 
 const handleEdit = (id, spanEl) => {
@@ -141,17 +166,18 @@ const handleEdit = (id, spanEl) => {
   let cancelled = false;
 
   const saveEdit = async () => {
-    // Flag garante que blur não salva quando Escape foi pressionado
     if (cancelled) return;
-
     const newTitle = editInput.value.trim();
-
-    if (newTitle && newTitle !== task.title) {
-      const updated = await api.updateTask(id, { title: newTitle });
-      tasks = tasks.map(t => t.id === id ? updated : t);
+    try {
+      if (newTitle && newTitle !== task.title) {
+        const updated = await api.updateTask(id, { title: newTitle });
+        tasks = tasks.map(t => t.id === id ? updated : t);
+      }
+      render();
+    } catch (error) {
+      showError('Não foi possível salvar a edição. Tente novamente.');
+      render();
     }
-
-    render();
   };
 
   editInput.addEventListener('keydown', (event) => {
@@ -173,17 +199,19 @@ filterBtns.forEach(btn => {
 // ── Formulário ───────────────────────────────────────────
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-
   const title = input.value.trim();
   if (!title) return;
 
-  const priority = prioritySelect.value;
-  const newTask  = await api.createTask(title, priority);
-
-  tasks.push(newTask);
-  input.value          = '';
-  prioritySelect.value = 'medium';
-  render();
+  try {
+    const priority = prioritySelect.value;
+    const newTask  = await api.createTask(title, priority);
+    tasks.push(newTask);
+    input.value          = '';
+    prioritySelect.value = 'medium';
+    render();
+  } catch (error) {
+    showError('Não foi possível criar a tarefa. Tente novamente.');
+  }
 });
 
 // ── Eventos na lista ─────────────────────────────────────
@@ -213,8 +241,12 @@ taskList.addEventListener('dblclick', (event) => {
 // ── Inicialização ────────────────────────────────────────
 // Carrega as tarefas do servidor e renderiza o estado inicial
 const init = async () => {
-  tasks = await api.fetchTasks();
-  render();
+  try {
+    tasks = await api.fetchTasks();
+    render();
+  } catch (error) {
+    showError('Não foi possível carregar as tarefas. Verifique se o servidor está rodando.');
+  }
 };
 
 init();

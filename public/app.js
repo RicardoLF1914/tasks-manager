@@ -102,6 +102,53 @@ const handleToggle = async (id) => {
   render();
 };
 
+const handleEdit = (id, spanEl) => {
+  const li = spanEl.closest('.task-item');
+
+  // Evitar dupla edição
+  if (li.querySelector('.edit-input')) return;
+
+  const task = tasks.find(task => task.id === id);
+
+  // Criar input de edição
+  const editInput = document.createElement('input');
+  editInput.type      = 'text';
+  editInput.value     = task.title;
+  editInput.className = 'task-input edit-input';
+
+  // Substituir span pelo input
+  li.replaceChild(editInput, spanEl);
+  editInput.focus();
+  editInput.select(); // seleciona o texto para facilitar a edição
+  
+  let cancelled = false; // flag de cancelamento
+
+  // Salvar edição
+  const saveEdit = async () => {
+    if (cancelled) return; // cancelado — não salva
+
+    const newTitle = editInput.value.trim();
+
+    if (newTitle && newTitle !== task.title) {
+      const updated = await api.updateTask(id, { title: newTitle });
+      tasks = tasks.map(t => t.id === id ? updated : t);
+    }
+
+    render();
+  };
+
+  // Confirmar com Enter, cancelar com Escape, salvar com blur
+  editInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter')  { saveEdit(); }
+    if (event.key === 'Escape') {
+      cancelled = true; // marca como cancelado
+      render();         // remove o input do DOM — dispara blur
+    }
+  });
+
+  editInput.addEventListener('blur', saveEdit);
+};
+
 // ── Filtros ──────────────────────────────────────────────
 filterBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -137,6 +184,14 @@ taskList.addEventListener('click', (event) => {
     const id = Number(checkbox.closest('.task-item').dataset.id);
     handleToggle(id);
   }
+});
+
+taskList.addEventListener('dblclick', (event) => {
+  const span = event.target.closest('.task-title');
+  if (!span) return;
+
+  const id = Number(span.closest('.task-item').dataset.id);
+  handleEdit(id, span);
 });
 
 // ── Inicialização ────────────────────────────────────────

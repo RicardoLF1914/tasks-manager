@@ -43,6 +43,7 @@ const input      = document.querySelector('#task-input');
 const summaryText = document.querySelector('#summary-text');
 const filterBtns  = document.querySelectorAll('.btn-filter');
 const prioritySelect = document.querySelector('#priority-select');
+const progressBar = document.querySelector('#progress-bar');
 
 // ── Renderização ─────────────────────────────────────────
 const render = () => {
@@ -52,7 +53,7 @@ const render = () => {
   const filtered = tasks.filter(task => {
     if (currentFilter === 'pending')   return !task.completed;
     if (currentFilter === 'completed') return  task.completed;
-    return true; // 'all'
+    return true;
   });
 
   // Atualizar resumo
@@ -66,6 +67,10 @@ const render = () => {
     btn.classList.toggle('active', btn.dataset.filter === currentFilter);
   });
 
+  // Atualizar barra de progresso
+  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+  progressBar.style.width = `${percentage}%`;
+
   // Estado vazio
   if (filtered.length === 0) {
     emptyState.style.display = 'block';
@@ -74,13 +79,14 @@ const render = () => {
 
   emptyState.style.display = 'none';
 
+  // Renderizar tarefas
+  const priorityLabels = { high: 'Alta', medium: 'Média', low: 'Baixa' };
+
   for (const task of filtered) {
     const li = document.createElement('li');
     li.className = `task-item${task.completed ? ' completed' : ''}`;
-    li.dataset.id = task.id;
+    li.dataset.id       = task.id;
     li.dataset.priority = task.priority;
-
-    const priorityLabels = { high: 'Alta', medium: 'Média', low: 'Baixa' };
 
     li.innerHTML = `
       <input type="checkbox" ${task.completed ? 'checked' : ''} />

@@ -36,10 +36,12 @@ const writeTasks = (tasks) => {
 };
 
 // ── CRUD ─────────────────────────────────────────────────
+// Retorna todas as tarefas do arquivo, com migração defensiva para campos novos
 const getAllTasks = () => {
   return readTasks();
 };
 
+// Cria uma nova tarefa com id único, priority padrão e createdAt automático
 const addTask = ({ title, priority = 'medium' }) => {
   const tasks = readTasks();
   const newTask = {
@@ -54,6 +56,7 @@ const addTask = ({ title, priority = 'medium' }) => {
   return newTask;
 };
 
+// Atualiza campos específicos de uma tarefa — retorna null se não encontrada
 const updateTask = (id, changes) => {
   const tasks = readTasks();
   const index = tasks.findIndex(task => task.id === id);
@@ -63,6 +66,7 @@ const updateTask = (id, changes) => {
   return tasks[index];
 };
 
+// Remove uma tarefa pelo id — retorna false se não encontrada
 const deleteTask = (id) => {
   const tasks = readTasks();
   const index = tasks.findIndex(task => task.id === id);

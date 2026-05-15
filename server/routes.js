@@ -1,7 +1,8 @@
 const { getAllTasks, addTask, updateTask, deleteTask } = require('./taskService');
 
 // ── Helper: ler o body da requisição ────────────────────
-const lerBody = (req) => {
+// Acumula os chunks do body da requisição e resolve com o conteúdo completo
+const readBody = (req) => {
   return new Promise((resolve) => {
     let body = '';
     req.on('data', (chunk) => { body += chunk.toString(); });
@@ -10,6 +11,7 @@ const lerBody = (req) => {
 };
 
 // ── Helper: enviar resposta JSON ─────────────────────────
+// Serializa os dados para JSON e envia a resposta com o status code correto
 const sendJSON = (res, statusCode, data) => {
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
@@ -28,7 +30,7 @@ const handleRoutes = async (req, res) => {
 
   // POST /tasks — cria uma nova tarefa
   if (method === 'POST' && url === '/tasks') {
-    const body = await lerBody(req);
+    const body = await readBody(req);
     const { title, priority } = JSON.parse(body);
 
     // Validação — title é obrigatório
@@ -45,7 +47,7 @@ const handleRoutes = async (req, res) => {
   // PUT /tasks/:id — atualiza uma tarefa
   if (method === 'PUT' && url.startsWith('/tasks/')) {
     const id = Number(url.split('/')[2]);
-    const body = await lerBody(req);
+    const body = await readBody(req);
     const changes = JSON.parse(body);
     const updated = updateTask(id, changes);
     if (!updated) {

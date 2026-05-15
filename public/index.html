@@ -56,6 +56,20 @@
     <p class="empty-state" id="empty-state">Nenhuma tarefa ainda. Adicione uma acima!</p>
   </main>
 
+  <!-- Modal de detalhes -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <button class="modal-close" id="modal-close">✕</button>
+      <h2 class="modal-title" id="modal-title"></h2>
+      <p class="modal-description" id="modal-description"></p>
+      <div class="modal-meta">
+        <span class="priority-badge" id="modal-priority"></span>
+        <span class="modal-date" id="modal-date"></span>
+      </div>
+      <div class="modal-status" id="modal-status"></div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

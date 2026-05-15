@@ -8,6 +8,12 @@ const api = {
     return response.json();
   },
 
+  fetchTaskById: async (id) => {
+    const response = await fetch(`/tasks/${id}`);
+    if (!response.ok) throw new Error('Erro ao buscar tarefa');
+    return response.json();
+  },
+
   createTask: async (title, priority = 'medium', description = '') => {
     const response = await fetch('/tasks', {
       method: 'POST',
@@ -65,6 +71,13 @@ const prioritySelect = document.querySelector('#priority-select');
 const summaryText   = document.querySelector('#summary-text');
 const filterBtns    = document.querySelectorAll('.btn-filter');
 const progressBar   = document.querySelector('#progress-bar');
+const modalOverlay   = document.querySelector('#modal-overlay');
+const modalClose     = document.querySelector('#modal-close');
+const modalTitle     = document.querySelector('#modal-title');
+const modalDesc      = document.querySelector('#modal-description');
+const modalPriority  = document.querySelector('#modal-priority');
+const modalDate      = document.querySelector('#modal-date');
+const modalStatus    = document.querySelector('#modal-status');
 
 // ── Tema ─────────────────────────────────────────────────
 // Persiste a preferência do usuário no localStorage
@@ -141,6 +154,7 @@ const render = () => {
         ${task.description ? `<p class="task-description">${task.description}</p>` : ''}
       </div>
       <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
+      <button class="btn btn-info btn-detail" title="Ver detalhes">⋯</button>
       <button class="btn btn-danger btn-delete">✕</button>
     `;
 
@@ -173,27 +187,48 @@ const handleToggle = async (id) => {
 const handleEdit = (id, spanEl) => {
   const li = spanEl.closest('.task-item');
 
-  // Evitar dupla edição — verifica se já existe um input de edição no item
   if (li.querySelector('.edit-input')) return;
 
-  const task      = tasks.find(task => task.id === id);
-  const editInput = document.createElement('input');
-  editInput.type      = 'text';
-  editInput.value     = task.title;
-  editInput.className = 'task-input edit-input';
+  const task = tasks.find(task => task.id === id);
 
-  li.replaceChild(editInput, spanEl);
-  editInput.focus();
-  editInput.select();
+  // Input de edição do título
+  const titleInput = document.createElement('input');
+  titleInput.type      = 'text';
+  titleInput.value     = task.title;
+  titleInput.className = 'task-input edit-input';
+
+  // Textarea de edição da descrição
+  const descTextarea = document.createElement('textarea');
+  descTextarea.value     = task.description || '';
+  descTextarea.className = 'task-textarea edit-input';
+  descTextarea.rows      = 2;
+  descTextarea.placeholder = 'Description (optional)';
+
+  // Substitui o task-body por um container de edição
+  const taskBody = li.querySelector('.task-body');
+  const editBody = document.createElement('div');
+  editBody.className = 'task-body';
+  editBody.appendChild(titleInput);
+  editBody.appendChild(descTextarea);
+
+  li.replaceChild(editBody, taskBody);
+  titleInput.focus();
+  titleInput.select();
 
   let cancelled = false;
 
   const saveEdit = async () => {
     if (cancelled) return;
-    const newTitle = editInput.value.trim();
+
+    const newTitle = titleInput.value.trim();
+    const newDesc  = descTextarea.value.trim();
+
     try {
-      if (newTitle && newTitle !== task.title) {
-        const updated = await api.updateTask(id, { title: newTitle });
+      if (newTitle && (newTitle !== task.title || newDesc !== task.description)) {
+        const updated = await api.updateTask(id, {
+          title:       newTitle || task.title,
+          description: newDesc,
+        });
         tasks = tasks.map(t => t.id === id ? updated : t);
       }
       render();
@@ -203,12 +238,48 @@ const handleEdit = (id, spanEl) => {
     }
   };
 
-  editInput.addEventListener('keydown', (event) => {
+  titleInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter')  { saveEdit(); }
     if (event.key === 'Escape') { cancelled = true; render(); }
   });
 
-  editInput.addEventListener('blur', saveEdit);
+  descTextarea.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { cancelled = true; render(); }
+  });
+
+  // blur só salva quando o foco sai de ambos os campos
+  const handleBlur = () => {
+    setTimeout(() => {
+      if (!li.contains(document.activeElement)) {
+        saveEdit();
+      }
+    }, 100);
+  };
+
+  titleInput.addEventListener('blur', handleBlur);
+  descTextarea.addEventListener('blur', handleBlur);
+};
+
+const openModal = async (id) => {
+  try {
+    const task = await api.fetchTaskById(id);
+    const priorityLabels = { high: 'Alta', medium: 'Média', low: 'Baixa' };
+
+    modalTitle.textContent    = task.title;
+    modalDesc.textContent     = task.description || 'Sem descrição.';
+    modalPriority.textContent = priorityLabels[task.priority];
+    modalPriority.className   = `priority-badge ${task.priority}`;
+    modalDate.textContent     = `Criada em ${new Date(task.createdAt).toLocaleDateString('pt-BR')}`;
+    modalStatus.textContent   = task.completed ? '✅ Concluída' : '⏳ Pendente';
+
+    modalOverlay.classList.add('active');
+  } catch (error) {
+    showError('Não foi possível carregar os detalhes da tarefa.');
+  }
+};
+
+const closeModal = () => {
+  modalOverlay.classList.remove('active');
 };
 
 // ── Filtros ──────────────────────────────────────────────
@@ -217,6 +288,19 @@ filterBtns.forEach(btn => {
     currentFilter = btn.dataset.filter;
     render();
   });
+});
+
+// ── Modal ────────────────────────────────────────────────
+modalClose.addEventListener('click', closeModal);
+
+// Fechar ao clicar fora do modal
+modalOverlay.addEventListener('click', (event) => {
+  if (event.target === modalOverlay) closeModal();
+});
+
+// Fechar com Escape
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeModal();
 });
 
 // ── Formulário ───────────────────────────────────────────
@@ -252,6 +336,13 @@ taskList.addEventListener('click', (event) => {
   if (checkbox) {
     const id = Number(checkbox.closest('.task-item').dataset.id);
     handleToggle(id);
+  }
+
+  const detailBtn = event.target.closest('.btn-detail');
+  if (detailBtn) {
+    const id = Number(detailBtn.closest('.task-item').dataset.id);
+    openModal(id);
+    return;
   }
 });
 
